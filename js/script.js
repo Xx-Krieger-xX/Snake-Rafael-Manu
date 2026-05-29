@@ -6,7 +6,7 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d"); // Contexto de renderizado 2D para dibujar gráficos
 const scoreElement = document.getElementById("score");
 const startBtn = document.getElementById("startBtn");
-const randomColorBtn = document.getElementById("randomColorBtn");
+const randomColorBtn = document.getElementById("randomColorBtn"); // Botón para color aleatorio
 
 // === 2. VARIABLES DE ESTADO DEL JUEGO ===
 const gridSize = 20; // Tamaño en píxeles de cada segmento de la serpiente y de la comida
@@ -34,7 +34,8 @@ let foodY;
 let changingDirection = false;
 
 // === 3. ESTILOS Y COLORES ===
-// Obtenemos los colores definidos en las variables CSS globales para mantener consistencia visual
+// Obtenemos los colores definidos en las variables CSS globales para mantener consistencia visual.
+// Usamos 'let' para snakeColor y snakeBorder porque ahora el usuario puede cambiarlos dinámicamente.
 const styles = getComputedStyle(document.documentElement);
 let snakeColor = styles.getPropertyValue("--snake-color").trim();
 let snakeBorder = styles.getPropertyValue("--snake-border").trim();
@@ -49,30 +50,39 @@ drawSnake();
 startBtn.addEventListener("click", () => {
     if (!gameStarted) {
         gameStarted = true;
-        startBtn.classList.add("hidden"); // Ocultamos el botón al jugar
+        startBtn.classList.add("hidden"); // Ocultamos el botón de inicio al jugar
         generateFood(); // Posicionamos la primera manzana/comida
         main(); // Arrancamos el motor del juego
     }
 });
 
-function randomSnakePalette() {
-    const hue = Math.floor(Math.random() * 360);
-    const color = `hsl(${hue}, 75%, 55%)`;
-    const border = `hsl(${hue}, 80%, 40%)`;
+//======================================Actualizacion manual===========================================
 
+function randomSnakePalette() {
+    // Genera un tono aleatorio (0 a 360 grados) para el espectro de color HSL
+    const hue = Math.floor(Math.random() * 360);
+    const color = `hsl(${hue}, 75%, 55%)`; // Color principal brillante
+    const border = `hsl(${hue}, 80%, 40%)`; // Borde ligeramente más oscuro
+
+    // Actualiza las variables CSS globales para afectar la interfaz web (si aplica)
     document.documentElement.style.setProperty("--snake-color", color);
     document.documentElement.style.setProperty("--snake-border", border);
 
+    // Actualiza las variables internas del canvas para los siguientes fotogramas
     snakeColor = color;
     snakeBorder = border;
 }
 
+// Evento para cambiar el color de la serpiente sin reiniciar el juego
 randomColorBtn.addEventListener("click", () => {
     randomSnakePalette();
+    // Forzamos un redibujado inmediato del lienzo para mostrar el nuevo color, 
+    // incluso si el juego está pausado o no ha comenzado.
     clearCanvas();
-    drawFood();
+    if (gameStarted) drawFood(); // Solo dibujamos la comida si el juego ya empezó
     drawSnake();
 });
+//======================================Actualizacion manual===========================================
 
 // === 5. BUCLE PRINCIPAL DEL JUEGO ===
 function main() {
@@ -89,7 +99,7 @@ function main() {
     changingDirection = false;
     
     // El bucle se llama a sí mismo recursivamente usando setTimeout.
-    // El tiempo de espera (gameSpeed) es dinámico, por lo que el juego se acelera con el tiempo.
+    // El tiempo de espera está determinado por la variable dinámica 'gameSpeed'.
     setTimeout(function onTick() {
         clearCanvas(); // Borramos la pantalla anterior
         drawFood();    // Dibujamos la comida
@@ -100,7 +110,6 @@ function main() {
 }
 
 // === 6. FUNCIONES DE DIBUJO ===
-
 function clearCanvas() {
     // Borra todo el contenido del canvas (necesario en cada fotograma para que no quede el rastro)
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -128,7 +137,7 @@ function drawFood() {
     ctx.strokeRect(foodX + 2, foodY + 2, gridSize - 4, gridSize - 4);
 }
 
-// === 7. LÓGICA DE MOVIMIENTO, COMIDA Y VELOCIDAD ===
+// === 7. LÓGICA DE MOVIMIENTO Y COMIDA ===
 function moveSnake() {
     // Crea un nuevo objeto para la cabeza, proyectando su posición según la dirección actual (dx, dy)
     const head = { x: snake[0].x + dx, y: snake[0].y + dy };
@@ -140,7 +149,7 @@ function moveSnake() {
     if (hasEatenFood) {
         score += 10; // Aumenta la puntuación
         scoreElement.innerHTML = score;
-        updateSpeed(); // Verifica si debe aumentar la velocidad del juego
+        updateSpeed();  // Evalúa y actualiza la velocidad del juego por puntos
         generateFood(); // Crea una nueva comida en otra posición
         // Al comer, NO eliminamos la cola, logrando así que la serpiente crezca 1 bloque
     } else {
@@ -150,7 +159,7 @@ function moveSnake() {
 }
 
 function randomFood(min, max) {
-    // Genera un número aleatorio que se ajusta perfectamente a la cuadrícula de 20x20
+    // Genera un número aleatorio que se ajusta perfectamente a la cuadrícula (múltiplo de 20)
     return Math.round((Math.random() * (max - min) + min) / gridSize) * gridSize;
 }
 
@@ -161,19 +170,19 @@ function generateFood() {
     // Validación: Evita que la comida aparezca justo debajo del cuerpo de la serpiente
     snake.forEach(function hasSnakeEatenFood(part) {
         const hasEaten = part.x === foodX && part.y === foodY;
-        if (hasEaten) generateFood(); // Si hay colisión, intenta generar coordenadas nuevas
+        if (hasEaten) generateFood(); // Si hay colisión, recursivamente intenta generar coordenadas nuevas
     });
 }
 
 //=============================================================Actualizacion manual================================================================
-// Velocidad inicial en milisegundos (mayor número = más lento)
+// Velocidad inicial en milisegundos (mayor número = fotogramas más lentos)
 let gameSpeed = 140;
 
 function updateSpeed() {
-    // Sistema de progresión: Cada 50 puntos (5 comidas), sube de nivel
+    // Sistema de progresión: Cada 50 puntos (5 comidas), el jugador sube de "nivel" virtual
     const level = Math.floor(score / 50);
-    // Reduce el tiempo entre fotogramas en 10ms por nivel. 
-    // Math.max evita que baje de 60ms, estableciendo un límite máximo de velocidad.
+    // Por cada nivel, restamos 10ms a la velocidad para que el bucle se ejecute más rápido.
+    // Usamos Math.max para poner un tope máximo de velocidad (60ms), para que siga siendo jugable.
     gameSpeed = Math.max(60, 140 - level * 10);
 }
 
@@ -207,7 +216,7 @@ function changeDirection(event) {
 
     if (!gameStarted) return; // Ignora los controles si el juego no está activo
 
-    if (changingDirection) return; // Ignora la pulsación si ya se cambió de dirección en este fotograma
+    if (changingDirection) return; // Ignora la pulsación si ya procesamos un cambio en este fotograma
     changingDirection = true;
 
     const keyPressed = event.code;
@@ -218,8 +227,8 @@ function changeDirection(event) {
     const goingRight = dx === gridSize;
     const goingLeft = dx === -gridSize;
 
-    // Actualiza la dirección dependiendo de la tecla presionada (soporta Flechas y WASD).
-    // Las condiciones aseguran que la serpiente no pueda girar 180 grados instantáneamente.
+    // Actualiza la dirección dependiendo de la tecla presionada (soporta Flechas de dirección y teclas WASD).
+    // Las condiciones lógicas (!goingX) aseguran que la serpiente no pueda girar 180 grados de golpe.
     if ((keyPressed === "ArrowLeft" || keyPressed === "KeyA") && !goingRight) {
         dx = -gridSize;
         dy = 0;
