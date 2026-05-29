@@ -173,26 +173,19 @@ function hasGameEnded() {
 document.addEventListener("keydown", changeDirection);
 
 function changeDirection(event) {
-    // Evita que la página haga scroll con las flechas si se presionan esas teclas
-    if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(event.code) > -1) {
+    // Evita que la página haga scroll con las flechas o WASD si se presionan esas teclas
+    if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "KeyW", "KeyA", "KeyS", "KeyD"].includes(event.code)) {
         event.preventDefault();
     }
 
     // No procesar controles si el juego no ha comenzado
-    if (!gameStarted) return; 
-
-    // Códigos numéricos de las teclas de flechas
-    const LEFT_KEY = 37 || LEFT_KEY == 65; // <- o A
-    const RIGHT_KEY = 39 || RIGHT_KEY == 68;// -> o D
-    const UP_KEY = 38 || UP_KEY == 87; // ↑ o W
-    const DOWN_KEY = 40 || DOWN_KEY == 83; //↓ o S
+    if (!gameStarted) return;
 
     // Evita que se pulse más de una tecla en un mismo tick (evita que la serpiente "dé la vuelta" sobre sí misma muy rápido)
     if (changingDirection) return;
     changingDirection = true;
 
-    const keyPressed = event.keyCode;
-    // Averiguamos hacia dónde nos estamos moviendo actualmente
+    const keyPressed = event.code;
     const goingUp = dy === -gridSize;
     const goingDown = dy === gridSize;
     const goingRight = dx === gridSize;
@@ -200,19 +193,19 @@ function changeDirection(event) {
 
     // Cambiamos la dirección (dx, dy) solo si la tecla presionada no es la dirección opuesta
     // (Ej: Si vas a la derecha, no puedes ir a la izquierda directamente)
-    if (keyPressed === LEFT_KEY && !goingRight) {
+    if ((keyPressed === "ArrowLeft" || keyPressed === "KeyA") && !goingRight) {
         dx = -gridSize;
         dy = 0;
     }
-    if (keyPressed === UP_KEY && !goingDown) {
+    if ((keyPressed === "ArrowUp" || keyPressed === "KeyW") && !goingDown) {
         dx = 0;
         dy = -gridSize;
     }
-    if (keyPressed === RIGHT_KEY && !goingLeft) {
+    if ((keyPressed === "ArrowRight" || keyPressed === "KeyD") && !goingLeft) {
         dx = gridSize;
         dy = 0;
     }
-    if (keyPressed === DOWN_KEY && !goingUp) {
+    if ((keyPressed === "ArrowDown" || keyPressed === "KeyS") && !goingUp) {
         dx = 0;
         dy = gridSize;
     }
