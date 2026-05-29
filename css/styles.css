@@ -1,0 +1,116 @@
+/* css/styles.css */
+:root {
+    /* Paleta oscura amigable para la vista (tonos carbón) */
+    --bg-main: #18181b;      /* Fondo principal suave */
+    --bg-card: #27272a;      /* Contenedor principal */
+    --canvas-bg: #0f0f11;    /* Fondo del área de juego (muy oscuro, no puro) */
+    
+    /* Texto de bajo contraste para evitar fatiga visual */
+    --text-main: #e4e4e7;
+    --text-muted: #a1a1aa;
+    
+    /* Acento moderno (Verde esmeralda relajante) */
+    --accent-color: #10b981;
+    --accent-hover: #059669;
+    
+    /* Bordes sutiles */
+    --border-color: #3f3f46;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: var(--bg-main);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--text-main);
+}
+
+.game-container {
+    background-color: var(--bg-card);
+    padding: 2.5rem;
+    border-radius: 20px; /* Bordes más suaves y redondeados */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid var(--border-color);
+}
+
+h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2.2rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--text-main);
+}
+
+.score-text {
+    margin: 0 0 1.5rem 0;
+    font-size: 1.1rem;
+    color: var(--text-muted);
+}
+
+#score {
+    font-weight: 700;
+    color: var(--accent-color);
+    font-size: 1.4rem;
+}
+
+/* Botón moderno estilo "píldora" */
+.play-btn {
+    background-color: var(--accent-color);
+    color: #ffffff;
+    border: none;
+    padding: 0.8rem 2.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 50px; 
+    cursor: pointer;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+}
+
+.play-btn:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+}
+
+.play-btn:active {
+    transform: translateY(1px);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Lienzo del juego */
+canvas {
+    background-color: var(--canvas-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    display: block;
+}
+
+/* Instrucciones */
+.instructions {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin-top: 1.5rem;
+    margin-bottom: 0;
+}
+
+kbd {
+    background-color: #3f3f46;
+    border: 1px solid #52525b;
+    border-radius: 6px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.85rem;
+    font-family: monospace;
+    color: var(--text-main);
+    box-shadow: 0 2px 0 #18181b;
+}   
