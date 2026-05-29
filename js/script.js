@@ -182,10 +182,10 @@ function changeDirection(event) {
     if (!gameStarted) return; 
 
     // Códigos numéricos de las teclas de flechas
-    const LEFT_KEY = 37 || key == 65; // <- o A
-    const RIGHT_KEY = 39 || key == 68;// -> o D
-    const UP_KEY = 38 || key == 87; // ↑ o W
-    const DOWN_KEY = 40 || key == 83; //↓ o S
+    const LEFT_KEY = 37 || LEFT_KEY == 65; // <- o A
+    const RIGHT_KEY = 39 || RIGHT_KEY == 68;// -> o D
+    const UP_KEY = 38 || UP_KEY == 87; // ↑ o W
+    const DOWN_KEY = 40 || DOWN_KEY == 83; //↓ o S
 
     // Evita que se pulse más de una tecla en un mismo tick (evita que la serpiente "dé la vuelta" sobre sí misma muy rápido)
     if (changingDirection) return;
