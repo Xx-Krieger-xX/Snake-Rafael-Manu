@@ -4,6 +4,11 @@
     --bg-main: #18181b;      /* Fondo principal suave */
     --bg-card: #27272a;      /* Contenedor principal */
     --canvas-bg: #0f0f11;    /* Fondo del área de juego (muy oscuro, no puro) */
+    --grid-lines: #27272a;   /* Líneas de cuadrícula */
+    --snake-color: #10b981;  /* Color de la serpiente */
+    --snake-border: #059669; /* Borde de la serpiente */
+    --food-color: #f43f5e;   /* Color de la comida */
+    --food-border: #e11d48;  /* Borde de la comida */
     
     /* Texto de bajo contraste para evitar fatiga visual */
     --text-main: #e4e4e7;
@@ -91,6 +96,10 @@ h1 {
 /* Lienzo del juego */
 canvas {
     background-color: var(--canvas-bg);
+    background-image:
+        linear-gradient(to right, var(--grid-lines) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-lines) 1px, transparent 1px);
+    background-size: 20px 20px;
     border: 2px solid var(--border-color);
     border-radius: 10px;
     display: block;

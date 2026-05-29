@@ -32,13 +32,12 @@ let foodY;
 let changingDirection = false;
 
 // === 3. ESTILOS Y COLORES ===
-// Colores sincronizados con el nuevo CSS amigable a la vista
-const canvasBg = "#0f0f11";    // Mismo fondo oscuro suave del CSS
-const gridLines = "#27272a";   // Líneas de cuadrícula muy sutiles
-const snakeColor = "#10b981";  // Esmeralda relajante para el cuerpo
-const snakeBorder = "#059669"; // Borde de la serpiente
-const foodColor = "#f43f5e";   // Rojo frambuesa (menos agresivo que el rojo puro)
-const foodBorder = "#e11d48";  // Borde de la comida
+// Se leen desde CSS para mantener todo el aspecto visual en styles.css
+const styles = getComputedStyle(document.documentElement);
+const snakeColor = styles.getPropertyValue("--snake-color").trim();
+const snakeBorder = styles.getPropertyValue("--snake-border").trim();
+const foodColor = styles.getPropertyValue("--food-color").trim();
+const foodBorder = styles.getPropertyValue("--food-border").trim();
 
 // Dibujamos el estado inicial en pantalla antes de jugar
 clearCanvas();
@@ -82,29 +81,8 @@ function main() {
 
 // === 6. FUNCIONES DE DIBUJO ===
 
-function drawGrid() {
-    ctx.strokeStyle = gridLines;
-    ctx.lineWidth = 1;
-
-    for (let x = 0; x <= canvas.width; x += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-    }
-
-    for (let y = 0; y <= canvas.height; y += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
-    }
-}
-
 function clearCanvas() {
-    ctx.fillStyle = canvasBg;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    drawGrid();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
 function drawSnake() {
