@@ -77,16 +77,34 @@ function main() {
         moveSnake();   // 3. Actualizar posiciones de la serpiente
         drawSnake();   // 4. Dibujar la serpiente en su nueva posición
         main();        // 5. Llamarse a sí misma de nuevo (Loop)
-    }, 140); // 140 milisegundos de retraso (velocidad del juego)
+    }, gameSpeed); 
 }
 
 // === 6. FUNCIONES DE DIBUJO ===
-function clearCanvas() {
-    // Rellena el fondo
-    ctx.fillStyle = canvasBg;
+
+function drawGrid() {
     ctx.strokeStyle = gridLines;
+    ctx.lineWidth = 1;
+
+    for (let x = 0; x <= canvas.width; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+    }
+
+    for (let y = 0; y <= canvas.height; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+    }
+}
+
+function clearCanvas() {
+    ctx.fillStyle = canvasBg;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeRect(0, 0, canvas.width, canvas.height);
+    drawGrid();
 }
 
 function drawSnake() {
@@ -124,6 +142,7 @@ function moveSnake() {
         // Si comió: aumenta puntuación, actualiza texto y genera nueva comida
         score += 10;
         scoreElement.innerHTML = score;
+        updateSpeed();
         generateFood();
         // NOTA: No hacemos pop() aquí, por lo que la serpiente crece un bloque
     } else {
@@ -148,6 +167,13 @@ function generateFood() {
         // Si la comida apareció dentro del cuerpo, generamos otra inmediatamente
         if (hasEaten) generateFood();
     });
+}
+
+let gameSpeed = 140;
+
+function updateSpeed() {
+    const level = Math.floor(score / 50);
+    gameSpeed = Math.max(60, 140 - level * 10);
 }
 
 // === 8. LÓGICA DE COLISIONES ===
