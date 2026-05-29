@@ -89,6 +89,28 @@ h1 {
     transform: translateY(1px);
 }
 
+.secondary-btn {
+    background-color: #3f3f46;
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 0.7rem 1.4rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: 50px;
+    cursor: pointer;
+    margin-bottom: 1rem;
+    transition: all 0.2s ease;
+}
+
+.secondary-btn:hover {
+    background-color: #52525b;
+    transform: translateY(-1px);
+}
+
+.secondary-btn:active {
+    transform: translateY(1px);
+}
+
 .hidden {
     display: none !important;
 }

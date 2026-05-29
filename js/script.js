@@ -1,99 +1,120 @@
 // js/script.js
 
 // === 1. CONFIGURACIÓN INICIAL Y ELEMENTOS DEL DOM ===
-// Obtenemos los elementos del HTML con los que vamos a interactuar
+// Obtenemos las referencias a los elementos del HTML para poder manipularlos
 const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d"); // El contexto 2d nos permite dibujar en el canvas
+const ctx = canvas.getContext("2d"); // Contexto de renderizado 2D para dibujar gráficos
 const scoreElement = document.getElementById("score");
-const startBtn = document.getElementById("startBtn"); 
+const startBtn = document.getElementById("startBtn");
+const randomColorBtn = document.getElementById("randomColorBtn");
 
 // === 2. VARIABLES DE ESTADO DEL JUEGO ===
-const gridSize = 20; // Tamaño de cada "cuadro" o bloque del juego (serpiente y comida)
-let score = 0; // Puntuación inicial
-let gameStarted = false; // Controla si el juego está en curso
+const gridSize = 20; // Tamaño en píxeles de cada segmento de la serpiente y de la comida
+let score = 0;       // Puntuación actual del jugador
+let gameStarted = false; // Bandera para saber si el bucle del juego está activo
 
-// La serpiente es un array de coordenadas. Empieza con 3 bloques.
-// El índice 0 es la cabeza de la serpiente.
+// Posición inicial de la serpiente. Es un array de objetos con coordenadas (x, y).
+// El índice 0 siempre representa la cabeza de la serpiente. Inicia con 3 segmentos.
 let snake = [
     { x: 200, y: 200 },
     { x: 180, y: 200 },
     { x: 160, y: 200 }
 ];
 
-// Velocidad inicial: se mueve hacia la derecha (avanza en el eje X, no se mueve en el eje Y)
+// Velocidad y dirección inicial: se mueve hacia la derecha (suma 20px en X, 0px en Y)
 let dx = gridSize;
 let dy = 0;
 
-// Coordenadas de la comida
+// Variables para almacenar las coordenadas actuales de la comida
 let foodX;
 let foodY;
 
-// Evita que el jugador cambie de dirección múltiples veces en un solo "tick" (movimiento)
+// Bloqueo de dirección: previene que el jugador presione dos teclas muy rápido 
+// y haga que la serpiente colapse sobre sí misma en un solo fotograma.
 let changingDirection = false;
 
 // === 3. ESTILOS Y COLORES ===
-// Se leen desde CSS para mantener todo el aspecto visual en styles.css
+// Obtenemos los colores definidos en las variables CSS globales para mantener consistencia visual
 const styles = getComputedStyle(document.documentElement);
-const snakeColor = styles.getPropertyValue("--snake-color").trim();
-const snakeBorder = styles.getPropertyValue("--snake-border").trim();
+let snakeColor = styles.getPropertyValue("--snake-color").trim();
+let snakeBorder = styles.getPropertyValue("--snake-border").trim();
 const foodColor = styles.getPropertyValue("--food-color").trim();
 const foodBorder = styles.getPropertyValue("--food-border").trim();
 
-// Dibujamos el estado inicial en pantalla antes de jugar
+// Dibujamos el estado inicial en pantalla para que no se vea un lienzo en blanco antes de jugar
 clearCanvas();
 drawSnake();
 
 // === 4. EVENTOS DEL MENÚ ===
-// Iniciar el juego al hacer clic en el botón
 startBtn.addEventListener("click", () => {
     if (!gameStarted) {
         gameStarted = true;
-        startBtn.classList.add("hidden"); // Oculta el botón
-        generateFood(); // Crea la primera comida
-        main(); // Inicia el bucle principal del juego
+        startBtn.classList.add("hidden"); // Ocultamos el botón al jugar
+        generateFood(); // Posicionamos la primera manzana/comida
+        main(); // Arrancamos el motor del juego
     }
+});
+
+function randomSnakePalette() {
+    const hue = Math.floor(Math.random() * 360);
+    const color = `hsl(${hue}, 75%, 55%)`;
+    const border = `hsl(${hue}, 80%, 40%)`;
+
+    document.documentElement.style.setProperty("--snake-color", color);
+    document.documentElement.style.setProperty("--snake-border", border);
+
+    snakeColor = color;
+    snakeBorder = border;
+}
+
+randomColorBtn.addEventListener("click", () => {
+    randomSnakePalette();
+    clearCanvas();
+    drawFood();
+    drawSnake();
 });
 
 // === 5. BUCLE PRINCIPAL DEL JUEGO ===
 function main() {
-    // Primero comprobamos si hemos chocado (fin del juego)
+    // Condición de derrota: si choca, terminamos la ejecución
     if (hasGameEnded()) {
-        // Un pequeño retraso para que el usuario procese visualmente que chocó
         setTimeout(() => {
             alert("¡Juego Terminado! Tu puntuación final es: " + score);
-            document.location.reload(); // Recarga la página para reiniciar
+            document.location.reload(); // Recargamos la página para resetear todo el estado
         }, 100);
-        return; // Detiene la ejecución del juego
+        return; 
     }
 
-    // Permitimos cambiar de dirección en este nuevo turno
+    // Liberamos el bloqueo de dirección para permitir un nuevo giro en este fotograma
     changingDirection = false;
     
-    // Configuramos el temporizador para el siguiente "tick" (cuadro)
+    // El bucle se llama a sí mismo recursivamente usando setTimeout.
+    // El tiempo de espera (gameSpeed) es dinámico, por lo que el juego se acelera con el tiempo.
     setTimeout(function onTick() {
-        clearCanvas(); // 1. Limpiar el fotograma anterior
-        drawFood();    // 2. Dibujar la comida
-        moveSnake();   // 3. Actualizar posiciones de la serpiente
-        drawSnake();   // 4. Dibujar la serpiente en su nueva posición
-        main();        // 5. Llamarse a sí misma de nuevo (Loop)
-    }, gameSpeed); 
+        clearCanvas(); // Borramos la pantalla anterior
+        drawFood();    // Dibujamos la comida
+        moveSnake();   // Calculamos la nueva posición de la serpiente
+        drawSnake();   // Dibujamos la serpiente en su nueva posición
+        main();        // Siguiente ciclo
+    }, gameSpeed);//<---======================================Actualizacion manual=========================================== 
 }
 
 // === 6. FUNCIONES DE DIBUJO ===
 
 function clearCanvas() {
+    // Borra todo el contenido del canvas (necesario en cada fotograma para que no quede el rastro)
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
 function drawSnake() {
-    // Dibuja cada parte de la serpiente iterando sobre el array
+    // Recorre cada segmento del cuerpo de la serpiente y lo dibuja
     snake.forEach(drawSnakePart);
 }
 
 function drawSnakePart(snakePart) {
-    // Configura el color y dibuja un cuadrado en las coordenadas x,y de esa parte
     ctx.fillStyle = snakeColor; 
     ctx.strokeStyle = snakeBorder; 
+    // Dibuja el relleno y luego el borde de cada cuadrado (gridSize x gridSize)
     ctx.fillRect(snakePart.x, snakePart.y, gridSize, gridSize);
     ctx.strokeRect(snakePart.x, snakePart.y, gridSize, gridSize);
 }
@@ -101,102 +122,104 @@ function drawSnakePart(snakePart) {
 function drawFood() {
     ctx.fillStyle = foodColor; 
     ctx.strokeStyle = foodBorder;
-    // Hacemos que la comida sea un poco más pequeña que la cuadrícula para darle estilo (+2 y -4)
+    // Efecto visual: Se dibuja un poco más pequeña que la celda de la cuadrícula
+    // desplazando 2px hacia adentro y restando 4px al tamaño total.
     ctx.fillRect(foodX + 2, foodY + 2, gridSize - 4, gridSize - 4);
     ctx.strokeRect(foodX + 2, foodY + 2, gridSize - 4, gridSize - 4);
 }
 
-// === 7. LÓGICA DE MOVIMIENTO Y COMIDA ===
+// === 7. LÓGICA DE MOVIMIENTO, COMIDA Y VELOCIDAD ===
 function moveSnake() {
-    // Creamos una nueva cabeza sumando la dirección actual (dx, dy) a la cabeza antigua
+    // Crea un nuevo objeto para la cabeza, proyectando su posición según la dirección actual (dx, dy)
     const head = { x: snake[0].x + dx, y: snake[0].y + dy };
-    // Añadimos la nueva cabeza al principio del array de la serpiente
-    snake.unshift(head); 
+    snake.unshift(head); // Añade la nueva cabeza al inicio del array
 
-    // Comprobamos si la nueva cabeza coincide con la posición de la comida
+    // Comprueba si las coordenadas de la nueva cabeza coinciden con las de la comida
     const hasEatenFood = snake[0].x === foodX && snake[0].y === foodY;
     
     if (hasEatenFood) {
-        // Si comió: aumenta puntuación, actualiza texto y genera nueva comida
-        score += 10;
+        score += 10; // Aumenta la puntuación
         scoreElement.innerHTML = score;
-        updateSpeed();
-        generateFood();
-        // NOTA: No hacemos pop() aquí, por lo que la serpiente crece un bloque
+        updateSpeed(); // Verifica si debe aumentar la velocidad del juego
+        generateFood(); // Crea una nueva comida en otra posición
+        // Al comer, NO eliminamos la cola, logrando así que la serpiente crezca 1 bloque
     } else {
-        // Si no comió: eliminamos la cola para que parezca que avanza sin crecer
+        // Si no come, eliminamos el último segmento (cola) para mantener el mismo tamaño
         snake.pop();
     }
 }
 
 function randomFood(min, max) {
-    // Genera un múltiplo de gridSize (20) de forma aleatoria para encajar en la cuadrícula
+    // Genera un número aleatorio que se ajusta perfectamente a la cuadrícula de 20x20
     return Math.round((Math.random() * (max - min) + min) / gridSize) * gridSize;
 }
 
 function generateFood() {
-    // Calcula coordenadas aleatorias dentro de los límites del canvas
     foodX = randomFood(0, canvas.width - gridSize);
     foodY = randomFood(0, canvas.height - gridSize);
     
-    // Verifica que la comida no haya aparecido encima de la serpiente
+    // Validación: Evita que la comida aparezca justo debajo del cuerpo de la serpiente
     snake.forEach(function hasSnakeEatenFood(part) {
         const hasEaten = part.x === foodX && part.y === foodY;
-        // Si la comida apareció dentro del cuerpo, generamos otra inmediatamente
-        if (hasEaten) generateFood();
+        if (hasEaten) generateFood(); // Si hay colisión, intenta generar coordenadas nuevas
     });
 }
 
+//=============================================================Actualizacion manual================================================================
+// Velocidad inicial en milisegundos (mayor número = más lento)
 let gameSpeed = 140;
 
 function updateSpeed() {
+    // Sistema de progresión: Cada 50 puntos (5 comidas), sube de nivel
     const level = Math.floor(score / 50);
+    // Reduce el tiempo entre fotogramas en 10ms por nivel. 
+    // Math.max evita que baje de 60ms, estableciendo un límite máximo de velocidad.
     gameSpeed = Math.max(60, 140 - level * 10);
 }
 
+//===================================================================================================================================================
+
 // === 8. LÓGICA DE COLISIONES ===
 function hasGameEnded() {
-    // 1. Chocar consigo misma: comprobamos si la cabeza (índice 0) toca alguna otra parte
-    // Empezamos en 4 porque es imposible chocar con los primeros 3 segmentos
+    // 1. Autocolisión: Comprueba si la cabeza (índice 0) intersecta con cualquier parte del cuerpo.
+    // Inicia en el índice 4 porque físicamente una serpiente no puede chocar con sus primeros 3 segmentos.
     for (let i = 4; i < snake.length; i++) {
         if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) return true;
     }
     
-    // 2. Chocar con las paredes: comprobamos si la cabeza sale del canvas
+    // 2. Colisión con los bordes: Comprueba si la cabeza sobrepasa los límites del canvas
     const hitLeftWall = snake[0].x < 0;
     const hitRightWall = snake[0].x >= canvas.width;
     const hitTopWall = snake[0].y < 0;
     const hitBottomWall = snake[0].y >= canvas.height;
 
-    // Retorna true si cualquiera de estas condiciones se cumple
     return hitLeftWall || hitRightWall || hitTopWall || hitBottomWall;
 }
 
 // === 9. CONTROLES DE TECLADO ===
-// Escucha las pulsaciones de teclas en toda la página
 document.addEventListener("keydown", changeDirection);
 
 function changeDirection(event) {
-    // Evita que la página haga scroll con las flechas o WASD si se presionan esas teclas
+    // Previene el comportamiento por defecto (como hacer scroll en la página) para las teclas de control
     if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "KeyW", "KeyA", "KeyS", "KeyD"].includes(event.code)) {
         event.preventDefault();
     }
 
-    // No procesar controles si el juego no ha comenzado
-    if (!gameStarted) return;
+    if (!gameStarted) return; // Ignora los controles si el juego no está activo
 
-    // Evita que se pulse más de una tecla en un mismo tick (evita que la serpiente "dé la vuelta" sobre sí misma muy rápido)
-    if (changingDirection) return;
+    if (changingDirection) return; // Ignora la pulsación si ya se cambió de dirección en este fotograma
     changingDirection = true;
 
     const keyPressed = event.code;
+    
+    // Determinamos la dirección actual evaluando los vectores de movimiento
     const goingUp = dy === -gridSize;
     const goingDown = dy === gridSize;
     const goingRight = dx === gridSize;
     const goingLeft = dx === -gridSize;
 
-    // Cambiamos la dirección (dx, dy) solo si la tecla presionada no es la dirección opuesta
-    // (Ej: Si vas a la derecha, no puedes ir a la izquierda directamente)
+    // Actualiza la dirección dependiendo de la tecla presionada (soporta Flechas y WASD).
+    // Las condiciones aseguran que la serpiente no pueda girar 180 grados instantáneamente.
     if ((keyPressed === "ArrowLeft" || keyPressed === "KeyA") && !goingRight) {
         dx = -gridSize;
         dy = 0;
